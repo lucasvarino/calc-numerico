@@ -23,7 +23,7 @@
 (define listOfResult (list θ_0))
 
 (define (explicit-euler t_f t_i listOfResult)
-  (if (< t_i t_f)
+  (if (< t_i (- t_f 1))
       (explicit-euler t_f (+ 1 t_i) (append listOfResult (list
                                                           (+ (* step (* (- K) (- (list-ref listOfResult t_i) θ_m))) (list-ref listOfResult t_i)))))
       listOfResult))
