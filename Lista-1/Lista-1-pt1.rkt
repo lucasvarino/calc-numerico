@@ -7,6 +7,7 @@
 (require text-table)
 (require text-table/utils)
 (require math/bigfloat)
+(require plot)
 
 ;; Precision
 ; 64-bits
@@ -43,7 +44,7 @@ Erro para o metodo Crank Nicolson:  0.0135539472103118
 (define linspace
   (λ (start stop [num 50])
     (range start stop (bigfloat->flonum (bf (/ stop num))))))
-; (linspace 0 50 50)
+; (linspace 0 51 50)
 
 ;; Exact solution 
 (define (exact-solution t i result)
@@ -77,7 +78,7 @@ Erro para o metodo Crank Nicolson:  0.0135539472103118
 ;(implicit-euler t_f t_i listOfResultExp)
 
 ;; Crank-Nicolson
-(define listOfResultCN (list θ_0))
+(define listOfResultCN (list (bigfloat->flonum (bf θ_0))))
 
 (define (crank-nicolson t_f t_i listOfResultCN)
   (if (< t_i (- t_f 1))
@@ -98,9 +99,21 @@ Erro para o metodo Crank Nicolson:  0.0135539472103118
   '("Exato" "Euler Explícito" "Euler Implícito" "Crank Nicolson")
   (transpose
    (list (exact-solution (linspace 0 51 50) 0 '())
-    (explicit-euler t_f t_i listOfResultExp) 
-    (implicit-euler t_f t_i listOfResultImp)
-    (crank-nicolson t_f t_i listOfResultCN)))))
+         (explicit-euler t_f t_i listOfResultExp) 
+         (implicit-euler t_f t_i listOfResultImp)
+         (crank-nicolson t_f t_i listOfResultCN)))))
+
+
+
+(define (convergence-rate t_f t_i listOfResultExp listOfResultImp listOfResultCN)
+  (if (< t_i (- t_f 1))
+      (convergence-rate t_f (+ 1 t_i) (append listOfResultExp (list
+                                                               (bigfloat->flonum (bf (+ (* step (* (- K) (- (list-ref listOfResultExp t_i) θ_m))) (list-ref listOfResultExp t_i)))))) 
+                        (append listOfResultImp (list
+                                                 (bigfloat->flonum (bf (/ (+ (list-ref listOfResultImp t_i) (* K step θ_m)) (+ 1 (* K step)))))))
+                        (append listOfResultCN (list
+                                                (bigfloat->flonum (bf (/ (+ (/ (* (- K) step (- (list-ref listOfResultCN t_i) (* 2 θ_m))) 2) (list-ref listOfResultCN t_i)) (+ 1 (/ (* K step) 2))))))))
+      (list (list-ref listOfResultExp (- t_f 1)) (list-ref listOfResultImp (- t_f 1)) (list-ref listOfResultCN (- t_f 1)))))
 
 ;; Errors
 
@@ -115,3 +128,6 @@ Erro para o metodo Crank Nicolson:  0.0135539472103118
 (bigfloat->flonum (bf (findError (exact-solution (linspace 0 51 50) 0 '()) (implicit-euler t_f t_i listOfResultImp) '())))
 (display "Erro para o metodo Crank Nicolson:  ")
 (bigfloat->flonum (bf (findError (exact-solution (linspace 0 51 50) 0 '()) (crank-nicolson t_f t_i listOfResultCN) '())))
+
+(display "convergencia: ")
+(convergence-rate t_f t_i listOfResultExp listOfResultImp listOfResultCN)
